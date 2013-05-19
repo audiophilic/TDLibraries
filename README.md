@@ -6,24 +6,36 @@ TDLibraries
 
 
 ##TDLocationManager
-*TDLocationManager* allows you to use the iPhone's GPS chip to acquire the user's location without having to deal with the hassles of setting it up correctly and efficiently. Everything is taken care of and it is very easy to use.
+*TDLocationManager* allows you to acquire the user's location without having to deal with the hassles of setting it up correctly and efficiently. Everything is taken care of and it is very easy to use.
 
 ###Setup
 1. Download the zip file of this repo
 2. Add TDLocationManager.h/m files into your Xcode Project.
-3. Add youself as an observer to the Notification `TDLocationManagerDidUpdateLocationNotification` in your respective ViewControllers
+3. Add youself as an observer to the two Notifications `TDLocationManagerDidUpdateLocationNotification` and `TDLocationManagerDidFailNotification` in your respective ViewControllers
 
 ###Example Code:
 ```objective-c
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
-   [[NSNotificationCenter defaultCenter] addObserver:self 
-                                         selector:@selector(yourSelector:) 
-                                             name:TDLocationManagerDidUpdateLocationNotification 
-                                           object:nil];
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+    	...
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(didUpdateToLocation:)
+                                                     name:TDLocationManagerDidUpdateLocationNotification
+                                                   object:nil];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(didFailWithError:)
+                                                     name:TDLocationManagerDidFailNotification
+                                                   object:nil];
+    	...
+    }
+    return self;
 }
-```
-That's it! The new location (`CLLocation`) is returned as the object property of the Notification.
+
+````
+That's it! The new `CLLocation` and `NSError` are returned in the object property of the `NSNotifications`.
 
 =
 ##TDSlideViewController
@@ -43,16 +55,26 @@ That's it! The new location (`CLLocation`) is returned as the object property of
 ```objective-c
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-   TDSlideViewController *slideController = [TDSlideViewController sharedInstance];
-	MainViewController *mainViewController = [[MainViewController alloc] init];
-	LeftViewController *leftViewController = [[LeftViewController alloc] init];
-	RightViewController *rightViewController = [[RightViewController alloc] init];
+    self.window = [[[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]] autorelease];
+    ...
+    TDSlideViewController *slideViewController = [TDSlideViewController sharedInstance];
+    MainViewController *mainViewController = [[MainViewController alloc] init];
+    LeftViewController *leftViewController = [[LeftViewController alloc] init];
+    RightViewController *rightViewController = [[RightViewController alloc] init];
 
-	[slideController setMainViewController:mainViewController];
-	[slideController setLeftViewController:leftViewController];
-	[slideController setRightViewController:rightViewController];
+    [slideViewController setMainViewController:mainViewController];
+    [slideViewController setLeftViewController:leftViewController];
+    [slideViewController setRightViewController:rightViewController];
+
+    [mainViewController release];
+    [leftViewController release];
+    [rightViewController release];
+    ...
+    
+    return YES;
 }
-```
+
+````
 ===
 ##License
 
