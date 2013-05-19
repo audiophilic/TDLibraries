@@ -166,7 +166,6 @@ static TDSlideViewController *_slideViewController = nil;
 {
     return UIInterfaceOrientationMaskPortrait;
 }
-
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
 {
 	UITouch *touch = [[event allTouches] anyObject];
@@ -175,15 +174,11 @@ static TDSlideViewController *_slideViewController = nil;
 	
 	if((self.rightDrawerOpen || self.leftDrawerOpen) && !CGPointEqualToPoint(self.beginningTouchLocation, CGPointMake(CGFLOAT_MAX, CGFLOAT_MAX)))
 	{
-		if (CGRectContainsPoint(CGRectMake(0, 0, kMinOriginPercentage * CGRectGetWidth(mainViewRect), mainViewRect.size.height), location)) {
-            
-			[self openLeftDrawer:NO withDuration:kDefaultSlideAnimationDuration];
-		}
+		if (CGRectContainsPoint(CGRectMake(0, 0, kMinOriginPercentage * CGRectGetWidth(mainViewRect), mainViewRect.size.height), location))
+        	[self openLeftDrawer:NO withDuration:kDefaultSlideAnimationDuration];
 		
 		else if (CGRectContainsPoint(CGRectMake(kMaxOriginPercentage * CGRectGetWidth(mainViewRect), 0, kMinOriginPercentage * CGRectGetWidth(mainViewRect), mainViewRect.size.height), location))
-		{
 			[self openRightDrawer:NO withDuration:kDefaultSlideAnimationDuration];
-		}
 	}
 }
 
