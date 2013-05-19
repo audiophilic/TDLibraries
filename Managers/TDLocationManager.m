@@ -4,6 +4,7 @@ static TDLocationManager *sharedLocationManager = nil;
 
 @interface TDLocationManager ()
 
+- (BOOL)checkLocationServices;
 @end
 
 @implementation TDLocationManager
@@ -39,10 +40,33 @@ static TDLocationManager *sharedLocationManager = nil;
     [super dealloc];
     
 }
-
+- (BOOL)checkLocationServices
+{
+    if([CLLocationManager locationServicesEnabled])
+    {
+        if([CLLocationManager authorizationStatus] == kCLAuthorizationStatusDenied)
+        {
+            NSError *error = nil;
+            NSMutableDictionary *errorInfo = nil;
+            errorInfo = [NSMutableDictionary dictionaryWithObject:kTDLocationManagerAuthStatusDeclined forKey:NSLocalizedDescriptionKey];
+            error = [NSError errorWithDomain:kTDLocationManagerErrorDomain
+                                        code:TDLocationManagerErrorAuthorizationStatus
+                                    userInfo:errorInfo];
+            [[NSNotificationCenter defaultCenter] postNotificationName:TDLocationManagerDidFailNotification
+                                                                object:error];
+            return NO;
+        }
+    }
+    
+    return YES;
+}
 - (void)updateLocation
 {
-    [self.locationManager startUpdatingLocation];
+    if ([self checkLocationServices])
+    {
+        [self.locationManager startUpdatingLocation];
+    }
+
 }
 
 - (void)stopUpdatingLocation
@@ -71,7 +95,37 @@ static TDLocationManager *sharedLocationManager = nil;
 
 - (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error
 {
-    
+    switch ([error code]) {
+        case kCLErrorLocationUnknown:
+            break;
+        case kCLErrorDenied:
+        {
+            [self.locationManager stopUpdatingLocation];
+            [[NSNotificationCenter defaultCenter] postNotificationName:TDLocationManagerDidFailNotification object:error];
+        }
+        default:
+            break;
+    }
+}
+
+- (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
+{
+    NSError *error = nil;
+    NSMutableDictionary *errorInfo = nil;
+    switch (status) {
+        case kCLAuthorizationStatusDenied:
+        {
+            errorInfo = [NSMutableDictionary dictionaryWithObject:kTDLocationManagerAuthStatusDeclined forKey:NSLocalizedDescriptionKey];
+            error = [NSError errorWithDomain:kTDLocationManagerErrorDomain
+                                        code:TDLocationManagerErrorAuthorizationStatus
+                                    userInfo:errorInfo];
+            [[NSNotificationCenter defaultCenter] postNotificationName:TDLocationManagerDidFailNotification
+                                                                object:error];
+                    break;
+        }
+        default:
+            break;
+    }
 }
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
@@ -81,21 +135,26 @@ static TDLocationManager *sharedLocationManager = nil;
         [_locationManager stopUpdatingLocation];
         [_currentLocation release];
         _currentLocation = [newLocation retain];
-        [[NSNotificationCenter defaultCenter] postNotificationName:TDLocationManagerDidUpdateLocationNotification object:newLocation];
+        NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
+                              self.currentLocation, kTDLocationManagerLocation,
+                              nil];
+        [[NSNotificationCenter defaultCenter] postNotificationName:TDLocationManagerDidUpdateLocationNotification object:info];
     }
 }
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations
 {
-
-
     CLLocation *newLocation = [locations lastObject];
+    NSLog(@"%@", [newLocation description]);
     if([self validateNewLocation:newLocation])
     {
         [_locationManager stopUpdatingLocation];
         [_currentLocation release];
         _currentLocation = [newLocation retain];
-        [[NSNotificationCenter defaultCenter] postNotificationName:TDLocationManagerDidUpdateLocationNotification object:newLocation];
+        NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
+                              self.currentLocation, kTDLocationManagerLocation,
+                              nil];
+        [[NSNotificationCenter defaultCenter] postNotificationName:TDLocationManagerDidUpdateLocationNotification object:info];
     }
 }
 
