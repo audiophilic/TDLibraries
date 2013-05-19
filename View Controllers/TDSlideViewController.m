@@ -1,4 +1,4 @@
-#import "SlideViewController.h"
+#import "TDSlideViewController.h"
 
 static TDSlideViewController *_slideViewController = nil;
 
@@ -22,7 +22,7 @@ static TDSlideViewController *_slideViewController = nil;
 
 @end
 
-@implementation SlideViewController
+@implementation TDSlideViewController
 {}
 #pragma mark Getters and Setters
 - (BOOL)isLeftDrawerOpen
