@@ -19,7 +19,7 @@ static TDSlideViewController *_slideViewController = nil;
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gesture;
 - (void)slideView:(UIView *)view withVelocity:(CGFloat)velocity inDirection:(SlideDirection)direction;
 - (void)translateGesture:(UIPanGestureRecognizer *)gesture byTranslation:(CGFloat)translation inDirection:(PanDirection)direction;
-
+- (void)orientationChanged;
 @end
 
 @implementation TDSlideViewController
@@ -136,6 +136,7 @@ static TDSlideViewController *_slideViewController = nil;
 		self.panGestureRecognizer.maximumNumberOfTouches = 1;
 		self.panGestureRecognizer.delegate = self;
 		[self.view addGestureRecognizer:self.panGestureRecognizer];
+        [self.view setBackgroundColor:[UIColor blackColor]];
 	}
 }
 
@@ -152,6 +153,19 @@ static TDSlideViewController *_slideViewController = nil;
 	[_mainViewController release];
 	[super dealloc];
 }
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation
+{
+    return UIInterfaceOrientationIsPortrait(toInterfaceOrientation);
+}
+
+- (BOOL)shouldAutorotate
+{
+    return NO;
+}
+- (NSInteger)supportedInterfaceOrientations
+{
+    return UIInterfaceOrientationMaskPortrait;
+}
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
 {
@@ -162,6 +176,7 @@ static TDSlideViewController *_slideViewController = nil;
 	if((self.rightDrawerOpen || self.leftDrawerOpen) && !CGPointEqualToPoint(self.beginningTouchLocation, CGPointMake(CGFLOAT_MAX, CGFLOAT_MAX)))
 	{
 		if (CGRectContainsPoint(CGRectMake(0, 0, kMinOriginPercentage * CGRectGetWidth(mainViewRect), mainViewRect.size.height), location)) {
+            
 			[self openLeftDrawer:NO withDuration:kDefaultSlideAnimationDuration];
 		}
 		
@@ -170,6 +185,12 @@ static TDSlideViewController *_slideViewController = nil;
 			[self openRightDrawer:NO withDuration:kDefaultSlideAnimationDuration];
 		}
 	}
+}
+
+- (void)orientationChanged
+{
+    [self openLeftDrawer:self.leftDrawerOpen withDuration:kDefaultSlideAnimationDuration];
+    [self openRightDrawer:self.rightDrawerOpen withDuration:kDefaultSlideAnimationDuration];
 }
 #pragma mark - 
 #pragma mark SlideController Methods
