@@ -12,11 +12,10 @@ static TDLocationManager *sharedLocationManager = nil;
 
 + (TDLocationManager *)sharedInstance
 {
-    if(!sharedLocationManager)
-    {
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
         sharedLocationManager = [[TDLocationManager alloc] init];
-    }
-    
+    });
     return sharedLocationManager;
 }
 
