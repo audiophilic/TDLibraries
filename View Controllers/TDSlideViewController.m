@@ -23,13 +23,13 @@ static TDSlideViewController *_slideViewController = nil;
 @end
 
 @implementation TDSlideViewController
-{}
-#pragma mark Getters and Setters
-- (BOOL)isLeftDrawerOpen
+@dynamic leftDrawerOpen, rightDrawerOpen;
+
+- (BOOL)leftDrawerOpen
 {
     return (self.mainViewController.view.frame.origin.x == kMaxOriginPercentage * CGRectGetWidth(self.mainViewController.view.bounds));
 }
--(BOOL)isRightDrawerOpen
+-(BOOL)rightDrawerOpen
 {
     return (self.mainViewController.view.frame.origin.x == -kMaxOriginPercentage * CGRectGetWidth(self.mainViewController.view.bounds));
 }
@@ -39,16 +39,16 @@ static TDSlideViewController *_slideViewController = nil;
 	CGRect mainViewRect = self.mainViewController.view.frame;
 	self.beginningTouchLocation = CGPointZero;
 	if(mainViewRect.origin.x == 0)
-        self.isDrawerOpen = self.leftDrawerVisible = self.rightDrawerVisible = self.leftDrawerOpen = self.rightDrawerOpen = NO;
+        self.isDrawerOpen = self.leftDrawerVisible = self.rightDrawerVisible =  NO;
     
 	else if(mainViewRect.origin.x < 0)
 	{
-		self.isDrawerOpen = self.rightDrawerVisible = self.rightDrawerOpen = YES;
+		self.isDrawerOpen = self.rightDrawerVisible =  YES;
 		self.leftDrawerVisible = NO;
 	}
 	else
 	{
-		self.isDrawerOpen = self.leftDrawerVisible =self.leftDrawerOpen = YES;
+		self.isDrawerOpen = self.leftDrawerVisible = YES;
 		self.rightDrawerVisible = NO;
 	}
 }
@@ -101,11 +101,11 @@ static TDSlideViewController *_slideViewController = nil;
 #pragma mark Class and Instance Methods
 + (TDSlideViewController *)sharedInstance
 {
-	if (!_slideViewController)
-	{
-		_slideViewController = [[TDSlideViewController alloc] init];
-	}
-	
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+            _slideViewController = [[TDSlideViewController alloc] init];
+    });
+    
 	return _slideViewController;
 }
 - (void)setupSlideController
@@ -191,31 +191,32 @@ static TDSlideViewController *_slideViewController = nil;
 #pragma mark SlideController Methods
 - (void)openLeftDrawer:(BOOL)open withDuration:(CGFloat)duration
 {
-	[UIView setAnimationCurve:UIViewAnimationCurveEaseOut];
-	[UIView animateWithDuration:kDefaultSlideAnimationDuration animations:^{
-		CGRect mainViewRect = self.mainViewController.view.frame;
-		mainViewRect.origin.x = (open ? kMaxOriginPercentage * CGRectGetWidth(mainViewRect) : 0.0);
-		self.mainViewController.view.frame = mainViewRect;
-	} completion:^(BOOL finished) {
-		[self setDrawerStates];
-	}];
+
+        [UIView setAnimationCurve:UIViewAnimationCurveEaseOut];
+        [UIView animateWithDuration:kDefaultSlideAnimationDuration animations:^{
+            CGRect mainViewRect = self.mainViewController.view.frame;
+            mainViewRect.origin.x = (open && self.leftViewController ? kMaxOriginPercentage * CGRectGetWidth(mainViewRect) : 0.0);
+            self.mainViewController.view.frame = mainViewRect;
+        } completion:^(BOOL finished) {
+            [self setDrawerStates];
+        }];
 }
 
 - (void)openRightDrawer:(BOOL)open withDuration:(CGFloat)duration
 {
-	[UIView setAnimationCurve:UIViewAnimationCurveEaseOut];
-	[UIView animateWithDuration:kDefaultSlideAnimationDuration animations:^{
-		CGRect mainViewRect = self.mainViewController.view.frame;
-		mainViewRect.origin.x = (open ? -kMaxOriginPercentage * CGRectGetWidth(mainViewRect) : 0.0);
-		self.mainViewController.view.frame = mainViewRect;
-	} completion:^(BOOL finished) {
-		[self setDrawerStates];
-	}];
+        [UIView setAnimationCurve:UIViewAnimationCurveEaseOut];
+        [UIView animateWithDuration:kDefaultSlideAnimationDuration animations:^{
+            CGRect mainViewRect = self.mainViewController.view.frame;
+            mainViewRect.origin.x = (open && self.rightViewController ? -kMaxOriginPercentage * CGRectGetWidth(mainViewRect) : 0.0);
+            self.mainViewController.view.frame = mainViewRect;
+        } completion:^(BOOL finished) {
+            [self setDrawerStates];
+        }];
 }
 
 - (void)translateGesture:(UIPanGestureRecognizer *)gesture byTranslation:(CGFloat)translation inDirection:(PanDirection)direction
 {
-	if (direction == PanDirectionLeft)
+	if ((direction == PanDirectionLeft && self.rightViewController) || (direction == PanDirectionLeft && self.leftDrawerVisible))
 	{
 		if(!self.rightDrawerVisible && !self.isDrawerOpen)
 		{
@@ -229,14 +230,15 @@ static TDSlideViewController *_slideViewController = nil;
 		self.mainViewController.view.frame = mainViewRect;
 	}
 	
-	else
+	else if ((direction == PanDirectionRight && self.leftViewController) || (direction == PanDirectionRight && self.rightDrawerVisible))
 	{
-		if(!self.leftDrawerVisible && !self.isDrawerOpen)
+		if(!self.leftDrawerVisible && !self.isDrawerOpen )
 		{
 			[self.view insertSubview:self.leftViewController.view belowSubview:self.mainViewController.view];
 			self.leftDrawerVisible = YES;
 			self.isDrawerOpen = YES;
 		}
+        
 		CGRect mainViewRect = self.mainViewController.view.frame;
 		CGFloat maxOrigin = (self.rightDrawerVisible ? 0 : kMaxOriginPercentage * CGRectGetWidth(mainViewRect));
 		mainViewRect.origin.x = MIN(maxOrigin, mainViewRect.origin.x + translation);
@@ -261,10 +263,10 @@ static TDSlideViewController *_slideViewController = nil;
         3.  Else view has just been panned and has not met requirements to open either drawer, so close it.
 		 */
         
-		if ((self.rightDrawerOpen || !self.rightDrawerOpen) && viewRect.origin.x <= -kBorderPercentage * CGRectGetWidth(viewRect))
+		if (viewRect.origin.x <= -kBorderPercentage * CGRectGetWidth(viewRect))
 			[self openRightDrawer:YES withDuration:kDefaultSlideAnimationDuration];
 		
-		else if ((self.leftDrawerOpen || !self.leftDrawerOpen) && viewRect.origin.x >= kBorderPercentage * CGRectGetWidth(viewRect))
+		else if (viewRect.origin.x >= kBorderPercentage * CGRectGetWidth(viewRect))
 			[self openLeftDrawer:YES withDuration:kDefaultSlideAnimationDuration];
 		
 		else
