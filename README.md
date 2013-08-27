@@ -75,6 +75,48 @@ That's it! The new `CLLocation` and `NSError` are returned in the object propert
 }
 
 ````
+
+##TDSlideShowViewController
+*TDSlideShowViewController* is a drop-in solution to present the user with a SlideShow/Tutorial.
+
+###Features
+- Automatically advance slideshow
+- Forward delegate methods for added functionality
+
+###Setup
+1. Download the zip file of this repo.
+2. Add TDSlideShowViewController.h/m files into your Xcode Project.
+3. Use the class methods `slideShowViewControllerWithImages:` or `slideShowViewControllerWithViews:` to create the a Slide Show View Controller with the respective Objects.
+4. If you want to use the built in timer to automatically advance the scrollview, just set the `slideShowTimerDuration` property.
+5. Once the scrollview has finished scrolling to the last page and the timer fires, the delegate method slideShowViewControllerDidFinishScrolling: is called.
+
+###Example Code:
+```objective-c
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+    self.window = [[[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]] autorelease];
+    ...
+	UIImageView *iv1 = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"Image1.jpg"]];
+	UIImageView *iv2 = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"Image2.jpg"]];
+	UIImageView *iv3 = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"Image3.jpg"]];
+	UIImageView *iv4 = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"Image4.jpg"]];
+
+    TDSlideShowViewController *slideShowViewController = [TDSlideShowViewController slideShowViewControllerWithViews:@[iv1, iv2, iv3, iv4]];
+	slideShowViewController.slideShowTimerDuration = 3.0;
+    slideShowViewController.delegate = self;
+
+	[iv1 release];
+	[iv2 release];
+	[iv3 release];
+	[iv4 release];
+
+    ...
+    
+    return YES;
+}
+
+````
+
 ===
 ##License
 
