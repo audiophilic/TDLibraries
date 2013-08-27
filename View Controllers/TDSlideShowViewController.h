@@ -22,7 +22,7 @@
 @interface TDSlideShowViewController : UIViewController <UIScrollViewDelegate>
 {
 	UIPageControl	*_pageControl;
-	NSTimer			*_slideShowTimer;
+	NSTimer		*_slideShowTimer;
 }
 
 + (TDSlideShowViewController *)slideShowViewControllerWithImages:(NSArray *)images;
